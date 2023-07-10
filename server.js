@@ -1,5 +1,4 @@
-require('dotenv').config(); // Load environment variables from .env file
-
+require('dotenv').config(); 
 const express = require('express');
 const bodyParser = require('body-parser');
 const { MongoClient } = require('mongodb');
@@ -17,20 +16,20 @@ app.get('/EditCat/:catId', (req, res) => {
 });
 
 
-const mongoUrl = process.env.MONGO_URL;
+mongoose.connect(process.env.MONGO_URL);
+const database = mongoose.connection
 
-mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    console.log('Connected to MongoDB');
-    
-    // Start the server after successfully connecting to MongoDB
-    app.listen(port, () => {
-      console.log(`Server running on http://localhost:${port}`);
-    });
-  })
-  .catch((error) => {
-    console.error('Error connecting to MongoDB:', error);
-  });
+database.on('error', (error) => {
+  console.log(error)
+})
+
+database.once('connected', () => {
+  console.log('Database Connected');
+})
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
+
 
 const catModel = require('./models/cat_M');
 
@@ -56,7 +55,6 @@ app.get("/api/phase-durations", (req, res) => {
       res.status(200).json({ message: "successfully retrieved duration", result });
     })
     .catch((error) => {
-      // Handle any potential errors here
       console.error(error);
       res.status(500).json({ message: "An error occurred while retrieving duration" });
     });
