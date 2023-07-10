@@ -1,0 +1,111 @@
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+  
+  table {
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  th, td {
+    border: 1px solid black;
+    padding: 8px;
+  }
+  
+  #addButton {
+    margin-bottom: 10px;
+  }
+</style>
+    <head>
+    <title>Production Line Control</title>
+  <main>
+    <h3>Production Line Control</h3>
+    <label for="durationInput">Phase Duration (in seconds):</label>
+    <form id="durationForm" method="post">
+     
+    
+      <input type="number" id="duration_input" name="duration" required>
+      <button type="submit">Update</button>
+      <div id="error_message"></div> 
+      <div id="success_message"></div>
+    </form>
+ </div>
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <script>
+    $(document).ready(function() {
+      let itemId;
+      const urlParts = window.location.href.split('/');
+      itemId = urlParts[urlParts.length - 1];
+  
+      fetch('/C/api/phase-durations/' + itemId)
+        .then(function(response) {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Error retrieving item data');
+          }
+        })
+        .then(function(response) {
+          console.log(response.result,'test');
+          if (response) {
+            const itemData = response.result;
+            $('#duration_input').val(itemData.duration);
+           
+          } else {
+            console.error('Error retrieving item data:', response.message);
+          }
+        })
+        .catch(function(error) {
+          console.error('Error retrieving item data:', itemId, error);
+          alert('Error retrieving item data. Please try again.');
+        });
+
+      //Edit cat_R duration
+        $('#durationForm').submit(function(event) {
+        event.preventDefault();
+        let duration = $('#duration_input').val();
+
+        if (duration <= 2) {
+          alert('Duration must be greater than 2');
+          return;
+        }
+        let payload = JSON.stringify({ duration });
+
+        // Send the form data using fetch
+        fetch('/C/api/phase-durations/' + itemId, {
+            method: 'PUT',
+          body: payload,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function(response) {
+          if (response.ok) {
+            window.location.href = '/C/Add';
+            console.log('Duration submitted');
+            $('#error_message').empty(); 
+            $('#success_message').text('Duration updated successfully!');
+            $('#durationForm')[0].reset(); 
+           
+          } else {
+            throw new Error('Error submitting duration');
+          }
+        })
+        .catch(function(error) {
+          console.error('Error submitting duration:', error);
+          $('#error_message').text('Error submitting duration');
+        });
+      })
+    });
+  </script>
+  <%- include ("./footer.ejs") %>
+  

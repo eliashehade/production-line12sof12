@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=   pageTitle %></title>
+    <link rel="stylesheet" href="/main.css" />
+</head>
+<body>
+   <header>
+       <h1 class="pageTitle"><%=   pageTitle %></h1>
+   </header>
+
+
+   <html>
+    <head>
+    <title>Production Line Control</title>
+  <main>
+    <h3>Production Line Control</h3>
+    <label for="durationInput">Phase Duration (in seconds):</label>
+    <form id="durationForm" method="post">
+     
+    
+      <input type="number" id="duration_input" name="duration" required>
+      <button type="submit">Save</button>
+      <div id="error_message"></div> 
+      <div id="success_message"></div>
+    </form>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+      
+      table {
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      
+      th, td {
+        border: 1px solid black;
+        padding: 8px;
+      }
+      
+      #addButton {
+        margin-bottom: 10px;
+      }
+    </style>
+  <head>
+    <table id="itemTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>Duration</th>
+          <th>Edit</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  
+    <script>
+  
+      
+      $(document).ready(function() {
+  
+  
+        $('#durationForm').submit(function(event) {
+          event.preventDefault();
+          let duration = $('#duration_input').val();
+  
+          if (duration <= 2) {
+            alert('Duration must be greater than 2');
+            return;
+          }
+          let payload = JSON.stringify({ duration });
+  
+          // Send the form data using fetch
+          fetch('/api/phase-durations', {
+            method: 'POST',
+            body: payload,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(function(response) {
+            if (response.ok) {
+              console.log('Duration submitted');
+              $('#error_message').empty(); 
+              $('#success_message').text('Duration submitted successfully!');
+              $('#durationForm')[0].reset(); 
+              loadItemList()
+            } else {
+              throw new Error('Error submitting duration');
+            }
+          })
+          .catch(function(error) {
+            console.error('Error submitting duration:', error);
+            $('#error_message').text('Error submitting duration');
+          });
+        });
+  
+        function loadItemList() {
+    fetch('/api/phase-durations')
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Error retrieving item list');
+        }
+      })
+      .then(data => {
+        console.log('Item list retrieved:', data);
+  
+        const table = $('#itemTable');
+        const tableBody = $('#itemTable tbody');
+        tableBody.empty();
+  
+        if (data.result.length !== 0) {
+          data.result.forEach(item => {
+            const row = $('<tr>');
+  
+            const durationCell = $('<td>').text(item.duration);
+  
+            const editCell = $('<td>');
+            const editButton = $('<button>').text('Edit');
+            editButton.click(function() {
+              editItem(item?._id, item.duration);
+            });
+            editCell.append(editButton);
+  
+            const deleteCell = $('<td>');
+            const deleteButton = $('<button>').text('Delete');
+            deleteButton.click(function() {
+              deleteItem(item._id);
+            });
+            deleteCell.append(deleteButton);
+  
+            row.append(durationCell, editCell, deleteCell);
+  
+            tableBody.append(row);
+          });
+          table.show();
+        } else {
+          table.hide();
+        }
+  
+        const addButtonCell = $('<td>');
+        const addButton = $('<button>').text('Add');
+        addButton.click(function() {
+          addItem();
+        });
+        addButtonCell.append(addButton);
+  
+      })
+      .catch(error => {
+        console.error('Error retrieving item list:', error);
+      });
+  }
+  
+  
+  
+  
+  function editItem(itemId) {
+    window.location.href = '/EditCat/' + itemId;
+  }
+  
+  
+  
+        loadItemList();
+  
+        function deleteItem(itemId) {
+  if (confirm('Are you sure you want to delete this item?')) {
+    fetch('/C/api/phase-durations/' + itemId, {
+      method: 'DELETE'
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log('Item deleted successfully');
+          alert('Item deleted successfully');
+          loadItemList(); // Refresh the item list
+        } else {
+          throw new Error('Error deleting item');
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting item:', error.message);
+        alert('Error deleting item');
+      });
+  }
+}
+
+      });
+    </script>
+  </main>
+  
